@@ -1,0 +1,847 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ShareFile Savings Calculator</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+:root{
+  --deep:#00123C; --navy:#00206B; --green:#00B563; --savgrn:#008963; --dkgreen:#008246;
+  --blue:#0069E8; --ltnavy:#EEF5FF; --line:#D2DCEB; --ink:#1E1E1E; --gray:#6E737D;
+  --orange:#CC6600; --ltorange:#FFEBD2;
+  --yellow:#FFFF99; --yellow-b:#E3D86A; --override:#FFE5CC; --override-b:#F0B27A; --auto:#D6E4F7; --auto-b:#A9C2E6;
+  --disabled:#DCDCDC; --bg:#F4F7FB; --card:#FFFFFF; --red:#C62828;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 "Segoe UI",system-ui,-apple-system,Arial,sans-serif}
+a{color:var(--blue)}
+.banner{background:#FFC832;color:#141414;font-size:12.5px;font-weight:600;text-align:center;padding:6px 16px}
+header{background:var(--deep);border-top:4px solid var(--green);color:#fff}
+.hwrap{max-width:1240px;margin:0 auto;padding:18px 16px 0;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.hwrap img{height:30px;width:auto}
+.hwrap h1{font-size:20px;margin:0;font-weight:600;letter-spacing:.2px}
+.hwrap h1 span{color:var(--green);font-weight:700}
+.hwrap .meta{margin-left:auto;font-size:12px;color:#A0B4DC}
+nav{max-width:1240px;margin:0 auto;padding:14px 16px 0;display:flex;gap:4px;overflow-x:auto}
+nav button{background:transparent;border:0;color:#C9D6EE;font:inherit;font-size:14px;padding:10px 14px;border-radius:8px 8px 0 0;cursor:pointer;white-space:nowrap}
+nav button:hover{color:#fff;background:rgba(255,255,255,.06)}
+nav button[aria-selected="true"]{background:var(--bg);color:var(--navy);font-weight:600}
+main{max-width:1240px;margin:0 auto;padding:20px 16px 48px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--gray);margin:0 0 16px}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:6px;border:1px solid rgba(0,0,0,.15)}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:980px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:20px}
+.card h2{font-size:13px;letter-spacing:.8px;text-transform:uppercase;color:var(--navy);margin:0 0 14px;display:flex;align-items:center;gap:8px}
+.card h2 small{text-transform:none;letter-spacing:0;font-weight:400;color:var(--gray);font-size:12px}
+.row{display:grid;grid-template-columns:200px minmax(0,1fr);gap:6px 14px;align-items:center;padding:7px 0;border-top:1px solid #EEF1F6}
+.row:first-of-type{border-top:0}
+.row label{font-weight:600;font-size:14px}
+.row .hint{grid-column:2;font-size:12px;color:var(--gray);margin-top:-2px}
+@media (max-width:560px){.row{grid-template-columns:1fr}.row .hint{grid-column:1}}
+input,select{font:inherit;width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--yellow-b);background:var(--yellow);color:var(--ink);min-height:38px}
+input:focus,select:focus{outline:2px solid var(--blue);outline-offset:1px}
+.auto{background:var(--auto);border:1px solid var(--auto-b);padding:8px 10px;border-radius:7px;min-height:38px;font-weight:600;color:var(--navy)}
+.ovr input{background:var(--override);border-color:var(--override-b)}
+.ovr input:disabled{background:var(--disabled);border-color:#C8C8C8;color:#A0A0A0;cursor:not-allowed}
+.money{position:relative}
+.money::before{content:"$";position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gray);pointer-events:none}
+.money input{padding-left:22px}
+.note{font-size:12.5px;color:var(--gray);background:var(--ltnavy);border-radius:8px;padding:10px 12px;margin-top:12px}
+.note.warn{background:#FFF4E5;color:#7A4100}
+.deal-head{background:var(--ltorange);color:#7A3D00;border-radius:8px;padding:10px 12px;font-size:12.5px;margin-bottom:10px}
+/* results */
+.sticky{position:sticky;top:12px}
+@media (max-width:980px){.sticky{position:static}}
+.hero{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.grid>div{min-width:0}
+@media (max-width:560px){.hero{grid-template-columns:1fr}.tile .v{font-size:23px}.card{padding:16px}}
+.tile{border-radius:10px;padding:14px 16px}
+.tile .k{font-size:11.5px;letter-spacing:.7px;text-transform:uppercase;font-weight:700}
+.tile .v{font-size:26px;font-weight:700;line-height:1.15;margin-top:4px;font-variant-numeric:tabular-nums}
+.tile .s{font-size:12.5px;margin-top:2px}
+.t-cur{background:#fff;border:1px solid var(--line)} .t-cur .k{color:var(--navy)}
+.t-sf{background:var(--ltnavy)} .t-sf .k{color:var(--navy)} .t-sf .v{color:var(--blue)}
+.t-sav{background:var(--savgrn);color:#fff;grid-column:1/-1} .t-sav .s{color:#C8EBD7}
+.t-sav.neg{background:var(--red)}
+table.calc{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+table.calc td{padding:7px 0;border-top:1px solid #EEF1F6}
+table.calc td:last-child{text-align:right;font-weight:600;white-space:nowrap;padding-left:12px}
+table.calc tr.tot td{border-top:2px solid var(--line);font-weight:700}
+table.calc tr.sub td{color:var(--gray);font-size:13px}
+table.calc .neg{color:var(--red)}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:var(--navy);color:#fff;border:0;border-radius:10px;padding:14px 18px;font:inherit;font-weight:700;font-size:15px;cursor:pointer}
+.btn:hover{background:#00185A}
+.btn:disabled{opacity:.6;cursor:progress}
+.btn.ghost{background:#fff;color:var(--navy);border:1px solid var(--line);font-weight:600;padding:10px 14px;font-size:14px;width:auto}
+.actions{display:flex;gap:10px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}
+.filehint{font-size:12px;color:var(--gray);text-align:center;margin-top:8px}
+/* messages */
+dialog{border:0;border-radius:12px;padding:0;max-width:520px;width:calc(100% - 32px);box-shadow:0 20px 60px rgba(0,18,60,.35)}
+dialog::backdrop{background:rgba(0,18,60,.45)}
+dialog .dh{padding:14px 20px;font-weight:700;color:#fff;background:var(--navy)}
+dialog .dh.warn{background:var(--orange)} dialog .dh.ok{background:var(--savgrn)}
+dialog .db{padding:16px 20px;white-space:pre-line;font-size:14px}
+dialog .df{padding:0 20px 16px;text-align:right}
+dialog .df button{background:var(--navy);color:#fff;border:0;border-radius:8px;padding:9px 18px;font:inherit;font-weight:600;cursor:pointer}
+/* reference tabs */
+.panel[hidden]{display:none}
+.ref h2{font-size:20px;margin:0 0 4px;color:var(--deep)}
+.ref .sub{color:var(--gray);font-size:13px;margin:0 0 18px}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:#fff;margin-bottom:22px}
+table.ref-t{border-collapse:collapse;width:100%;font-size:13.5px}
+table.ref-t th{background:var(--navy);color:#fff;text-align:left;padding:9px 12px;font-weight:600;white-space:nowrap;vertical-align:bottom}
+table.ref-t td{padding:8px 12px;border-top:1px solid #EEF1F6;vertical-align:top}
+table.ref-t td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.ref-t tr.sec td{background:var(--ltnavy);font-weight:700;color:var(--navy);letter-spacing:.5px}
+.status{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;white-space:nowrap}
+.st-MATCH{background:#DDF5E8;color:#006B3C}.st-MANUAL_REQUIRED{background:#FFF1D6;color:#8A5300}
+.st-CUSTOM_PRICING{background:#E8E3F8;color:#4B2C9E}.st-NEW{background:#DCEBFF;color:#0047A8}
+.steps{display:grid;gap:14px}
+.step{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:grid;grid-template-columns:44px 1fr;gap:14px}
+.step .num{width:36px;height:36px;border-radius:9px;background:var(--navy);color:#fff;font-weight:700;display:grid;place-items:center}
+.step h3{margin:4px 0 6px;font-size:16px;color:var(--deep)}
+.step p,.step ul{margin:0 0 8px;font-size:14px}
+.step ul{padding-left:18px}
+ol.legal{padding-left:20px;font-size:14px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 16px 16px 36px}
+ol.legal li{margin-bottom:8px}
+footer{max-width:1240px;margin:0 auto;padding:0 16px 32px;font-size:11.5px;color:var(--gray)}
+</style>
+</head>
+<body>
+<div class="banner">This pricing is for illustration purposes only. Internal sales use only. Please refer to the final quote for actual pricing.</div>
+<header>
+  <div class="hwrap">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABUgAAAC4CAYAAAAxKAYcAAAACXBIWXMAACE3AAAhNwEzWJ96AAAgAElEQVR4nO3dwXHbyNaG4Zd/3b10t9wIE4E5EQiOwHIALMMRWBOB4QhMR2CoGMDIERiKYKQIDG24vWIE/BcHGFCyJAJEA90gv6eK5RmbarZANNA43X16stlsEBERERERERERETlG//FdgdDNV5MISLb+6gG4Xk43hYfqiIiIiIiIiIiIiEMTzSB93nw1OQUWwIcX3vIFWCynm4fhaiUiIiIiIiIiIiIuKUD6jPlqkgKXwMmOt66By+V0k/VdJxEREREREREREXFPAdIt89XkAps1etbyR++wQGnuvFIiIiIiIiIiIiLSGwVIgflqMsMCo+cdi/qBBUqLzpUSERERERERERGR3h11gLTMM5oCnxwWu8aCrcpPKiIiIiIiIiIiErijDZDOV5NLLDi6K8/ovu6BVPlJRUREREREREREwnV0AdL5ahIDGe3zjO7rBlt2fzvQ54mIiIiIiIiIiEhDRxMgna8mERYY7ZpndF9XWKBUy+5FREREREREREQCcfAB0jLP6CXw2XddKPOTLqeb1HdFRERERERERERE5MADpPPVJME2TOorz+i+7rHZpNe+KyIiIiIiIiIiInLMDjJAWuYZXQBvPFdllxsgWU43he+KiIiIiIiIiIiIHKODCpCWeUYXwDu/NWntG7bjvfKTioiIiIiIiIiIDOggAqRbeUYvCW85fVNrLEi68F0RERERERERERGRYzH6AGmZZzQFzvzWxJl7bNl97rsiIiIiIiIiIiIih260AdIyz2gKnPutSW9+YBs5Fb4rIiIiIiIiIiIicqhGFyAtl9MvgA++6zKQL8BC+UlFRERERERERETcG1WAdL6apIw7z+i+1ths0sx3RURERERERERERA7JKAKk89XkAps1eih5Rvd1g23klPuuiIiIiIiIiIiIyCEIOkA6X00iIONw84zu6woLlBa+KyIiIiIiIiIiIjJmQQZIyzyjKfDJc1VCtsZm1So/qYiIiIiIiIiIyJ6CC5DOV5NLLDh6bHlG93WP5Se99l0RERERERERERGRsQkmQDpfTWbANcozuq8bLFB667siIiIiIiIiIiIiYxFMgBSOepd6l66wQKmW3YuIiIiIiIiIiOwQVIAU/s0/ugA++K7LiK2x3KSp74qIiIiIiIiIiIiELLgAaaVccr9AO9h3cQ8ky+km910RERERERERERGREAUbIK3MV5ME27RJuUn3d4MFSgvfFREREREREREREQlJ8AFS+HfZ/SXKT9rVNyBVflIREREREREREREzigBpZb6aRNhsUuUn3d8a28Qp810RERERERERERER30YVIK3MV5MYy0/6xnNVxuwOC5TmvisiIiIiIiIiIiLiyygDpJUyP+kCLbvv4gcWKC18V0RERERERERERGRoow6QwqP8pJ9912XkvgAL5ScVEREREREREZFjMvoAaaXMT7oA3vmtyajdY5s4Zb4rIiIiIiIiIiIiMoSDCZBWyvykGXDmtyajdoMFSnPfFREREREREREREenTwQVIK/PV5BLb8V75Sfd3hQVKC98VERERERERERER6cPBBkjh3/ykKfDJc1XGbI3lJk19V0RERERERERERMS1gw6QVuaryQzLT3ruuy4jdo/tdn/tuyIiIiIiIiIiIiKu/J/vCgxhOd3cLqebGHiPBfqkvTPg7/lqkpcBZxERERERcW+z45V6q5mIyHHR9fiIHEWAtLKcbq6X000EfMGWjkt758A/89UkK1MYiIiIiIiIiIiIjNZRBUgrZT7NCNuESPbzASjKzbBERERERERERERG6SgDpADL6eZhOd0kwFvgxnN1xuoE+DpfTYr5ahL7royIiIiIiIiIiEhb//FdAd+W000OxPPVJMHyR5z5rM9InQE/56vJX8vpZuG7Mq9IytdYPAC35X8XT14iIiIix2pWviIg3vq7kx0/t6buW91ifa18679FRETkSB19gLSynG6y+WpyDVyWr10dLPld6DlJIyyH6pi8e+Hvb7DOfF6+1KkXERGRQxUBF1gwNGb/fvoJdV+w+vNz+ec9j/tWt4iIyBhEWCxC123p5GiX2D+nXHafYiPQPzxXR+Q158An4G/gf9jNIMVuDiIiIiJjd4qt/MmBX8BXbOC4r0kMZ2X5X4F/sBU7GRaYFREZUs7u3dMP7RW3PEanwAKbKPQLu25vgGv0TCx7Cm4G6Xw1ibCOSDUb8XY53VwPWYfldFMAF2VezQXwZsjPF9nDm/L1GbjDztvMZ4VERERE9nBKGCu6zrBNST9gS/MzrH9V+KuSiIhgE9queT494jss2HqJnoelpWBmkM5Xk2i+mmTU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" alt="Progress ShareFile">
+    <h1><span>ShareFile</span> &nbsp;|&nbsp; Savings Calculator</h1>
+    <div class="meta">Pricing verified May 2026</div>
+  </div>
+  <nav role="tablist">
+    <button role="tab" data-tab="calc" aria-selected="true">Sales Input</button>
+    <button role="tab" data-tab="howto" aria-selected="false">How to Use</button>
+    <button role="tab" data-tab="formula" aria-selected="false">Formula Reference</button>
+    <button role="tab" data-tab="pricebook" aria-selected="false">Price Book</button>
+    <button role="tab" data-tab="sources" aria-selected="false">Pricing Sources</button>
+  </nav>
+</header>
+
+<main>
+<!-- ============ SALES INPUT ============ -->
+<section class="panel" id="tab-calc">
+  <div class="legend">
+    <span><i style="background:var(--yellow)"></i>Yellow = enter value</span>
+    <span><i style="background:var(--override)"></i>Orange = manual price override</span>
+    <span><i style="background:var(--auto)"></i>Blue = auto-calculated</span>
+  </div>
+  <div class="grid">
+    <div>
+      <div class="card">
+        <h2>Prospect Details</h2>
+        <div class="row"><label for="prospect">Company / Prospect Name</label><input id="prospect" type="text" autocomplete="off"><div class="hint">Enter company name</div></div>
+        <div class="row"><label for="users">No. of Users</label><input id="users" type="number" min="0" step="1" inputmode="numeric"><div class="hint">Enter number of users</div></div>
+        <div class="row"><label>Line Size</label><div class="auto" id="lineSize">—</div><div class="hint">Auto-populated</div></div>
+        <div class="row"><label for="esign">E-Sign Provider</label><select id="esign"></select><div class="hint">Select e-signature vendor</div></div>
+        <div class="row"><label for="fs">Collaboration Tool</label><select id="fs"></select><div class="hint">Select file sharing vendor</div></div>
+        <div class="row"><label for="plan">ShareFile Plan</label><select id="plan"></select><div class="hint">Select proposed ShareFile plan</div></div>
+        <div class="row"><label for="billing">Billing Type</label><select id="billing"><option>Annual</option><option>Monthly</option></select><div class="hint">Select Annual (cheapest) or Monthly</div></div>
+        <div class="row"><label for="mode">Pricing Mode</label><select id="mode"><option>Price Book (SRP)</option><option>Manual Entry</option></select><div class="hint">Price Book (SRP) = auto-fill from verified list &nbsp;|&nbsp; Manual Entry = type prices below</div></div>
+      </div>
+
+      <div class="card ovr">
+        <h2>Manual Price Override <small id="ovrState">(Manual Entry mode only)</small></h2>
+        <div class="row"><label for="f8">E-Sign $/user/yr</label><div class="money"><input id="f8" type="number" min="0" step="0.01" inputmode="decimal"></div><div class="hint">E-sign cost $/user/yr</div></div>
+        <div class="row"><label for="f9">Collaboration $/user/yr</label><div class="money"><input id="f9" type="number" min="0" step="0.01" inputmode="decimal"></div><div class="hint">Collaboration tool cost $/user/yr</div></div>
+        <div class="row"><label for="f10">ShareFile $/user/yr</label><div class="money"><input id="f10" type="number" min="0" step="0.01" inputmode="decimal"></div><div class="hint">ShareFile cost $/user/yr</div></div>
+        <div class="note">Manual Entry prices are not verified by ShareFile and are the sole responsibility of the sales representative. Use the customer's invoice for accuracy.</div>
+      </div>
+
+      <div class="card">
+        <h2>Deal Discount Savings</h2>
+        <div class="deal-head">This is for illustration purposes only. Please refer to the final quote for calculating discount.</div>
+        <div class="row"><label>ShareFile SRP $/User/Yr</label><div class="auto" id="srp">—</div><div class="hint">Auto-filled: annual list price for selected ShareFile plan</div></div>
+        <div class="row"><label for="deal">Your Deal Price $/User/Yr</label><div class="money"><input id="deal" type="number" min="0" step="0.01" inputmode="decimal"></div><div class="hint">Enter the annual deal price per user you are quoting</div></div>
+        <div class="row"><label>Deal Discount %</label><div class="auto" id="dealPct">—</div><div class="hint">(SRP − Deal Price) ÷ SRP</div></div>
+        <div class="row"><label>Deal Discount $/User/Yr</label><div class="auto" id="dealAmt">—</div><div class="hint">SRP − Deal Price</div></div>
+        <div class="row"><label>Total Effective Savings %</label><div class="auto" id="tesPct">—</div><div class="hint">(Competitor Total − Deal Price × Users) ÷ Competitor Total</div></div>
+        <div class="row"><label>Total Effective Savings $/Yr</label><div class="auto" id="tesAmt">—</div><div class="hint">Competitor Annual Total − (Deal Price × Users)</div></div>
+        <div class="row"><label>3-Year Deal Savings $</label><div class="auto" id="deal3">—</div><div class="hint">Total Effective Savings × 3 years (flat pricing assumed)</div></div>
+      </div>
+    </div>
+
+    <div class="sticky">
+      <div class="card">
+        <h2>Savings Summary <small id="sumSub"></small></h2>
+        <div class="hero">
+          <div class="tile t-cur"><div class="k">Current annual cost</div><div class="v" id="hCur">—</div><div class="s" id="hCurS">E-Sign + Collaboration</div></div>
+          <div class="tile t-sf"><div class="k" id="hSfK">ShareFile</div><div class="v" id="hSf">—</div><div class="s" id="hSfS">&nbsp;</div></div>
+          <div class="tile t-sav" id="hSavTile"><div class="k">Annual savings</div><div class="v" id="hSav">—</div><div class="s" id="hSavS">&nbsp;</div></div>
+        </div>
+        <table class="calc">
+          <tr class="sub"><td>E-Sign pricing model</td><td id="cModel">—</td></tr>
+          <tr><td>E-Sign cost $/user/yr</td><td id="cESRate">—</td></tr>
+          <tr><td>E-Sign annual spend</td><td id="cESSpend">—</td></tr>
+          <tr><td>Collaboration cost $/user/yr</td><td id="cFSRate">—</td></tr>
+          <tr><td>Collaboration annual spend</td><td id="cFSSpend">—</td></tr>
+          <tr class="tot"><td>Total current annual spend</td><td id="cCur">—</td></tr>
+          <tr><td>ShareFile cost $/user/yr</td><td id="cSFRate">—</td></tr>
+          <tr class="tot"><td>ShareFile annual cost</td><td id="cSF">—</td></tr>
+          <tr><td>Annual savings</td><td id="cSav">—</td></tr>
+          <tr><td>Savings %</td><td id="cPct">—</td></tr>
+          <tr><td>Per-user savings / yr</td><td id="cPU">—</td></tr>
+          <tr class="tot"><td>3-Year savings $</td><td id="c3">—</td></tr>
+        </table>
+        <div class="note warn" id="negNote" hidden>ShareFile costs more than the current stack at these inputs. As in the Excel version, the slides show annual savings, savings % and per-user savings as $0 / 0%.</div>
+      </div>
+      <button class="btn" id="exportBtn" type="button">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+        Export to Slides
+      </button>
+      <div class="filehint">Downloads <b>ShareFile Savings - [Company Name] - [Date].pptx</b> to your browser's Downloads folder</div>
+      <div class="actions"><button class="btn ghost" id="resetBtn" type="button">Clear inputs</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOW TO USE ============ -->
+<section class="panel ref" id="tab-howto" hidden>
+  <h2>ShareFile Savings Calculator — Step-by-Step User Guide</h2>
+  <p class="sub">For internal use only. Pricing sourced from public vendor pages as of May 2026. Subject to change.</p>
+  <div class="steps">
+    <div class="step"><div class="num">1</div><div><h3>Enter your customer's current tech stack</h3>
+      <p>Go to the Sales Input tab.</p>
+      <ul><li>Select the customer's current E-Sign Provider from the dropdown (e.g. DocuSign, Adobe Sign).</li>
+      <li>Select their current File Sharing Tool (e.g. M365 Business Standard, Dropbox Business Standard).</li>
+      <li>Enter the number of users.</li></ul>
+      <p>Pricing Mode = 'Price Book (SRP)': prices auto-fill from verified Price Book.<br>Pricing Mode = 'Manual Entry': type the customer's actual prices in the orange cells (use their invoice for accuracy).</p></div></div>
+    <div class="step"><div class="num">2</div><div><h3>Select billing cycle</h3>
+      <p>Choose how the customer currently pays:</p>
+      <ul><li>Annual — pays yearly (lowest rate, most common).</li><li>Monthly — pay-as-you-go (highest rate).</li></ul>
+      <p>All savings calculations normalize to an annual figure for consistent comparison.</p></div></div>
+    <div class="step"><div class="num">3</div><div><h3>Select the ShareFile plan to propose</h3>
+      <p>Choose the ShareFile plan you are recommending:</p>
+      <ul><li>Advanced — Encrypted storage, secure email, co-editing.</li><li>Premium — + Client portal, e-sign (100k docs/mo), AI workflows.</li>
+      <li>Industry Advantage — + Tax templates, bulk onboarding, accounting workflows.</li><li>Virtual Data Room — + Granular permissions, audit trails, watermarking.</li></ul>
+      <p>ShareFile pricing auto-fills from the Price Book at the selected billing cycle.</p></div></div>
+    <div class="step"><div class="num">4</div><div><h3>Review competitive savings</h3>
+      <p>The calculator shows:</p>
+      <ul><li>Competitor Stack Total: current annual cost (E-Sign + Collaboration × users).</li><li>ShareFile Annual Cost: proposed plan × users at selected billing cycle.</li>
+      <li>Annual Savings $: Competitor Total − ShareFile Total.</li><li>Savings % (Cost Reduction): Annual Savings ÷ Competitor Total × 100.</li>
+      <li>3-Year Savings $: Annual Savings × 3 (flat pricing assumed).</li></ul>
+      <p>These figures are at ShareFile's STANDARD LIST PRICE — before any deal discount.</p></div></div>
+    <div class="step"><div class="num">5</div><div><h3>Enter your deal price (optional)</h3>
+      <p>In the DEAL DISCOUNT SAVINGS section:</p>
+      <ul><li>ShareFile SRP $/User/Yr auto-fills from the Price Book annual rate.</li><li>Enter your Deal Price $/User/Yr — the discounted price you are quoting.</li>
+      <li>Deal Discount %: (SRP − Deal Price) ÷ SRP × 100.</li><li>Deal Discount $/User/Yr: dollar value of your discount per user.</li>
+      <li>Total Effective Savings %: how much cheaper ShareFile is vs their current stack AT YOUR DEAL PRICE.</li><li>3-Year Deal Savings $: total savings over 3 years at deal pricing.</li></ul>
+      <p>Deal discounts are subject to ShareFile's discount authorization policy. This is for illustration purpose only - please refer the final quote for calculating discount.</p></div></div>
+    <div class="step"><div class="num">6</div><div><h3>Export to PowerPoint</h3>
+      <p>Click the 'Export to Slides' button. The deck downloads through your browser with the name:<br><code>ShareFile Savings - [Company Name] - [Date].pptx</code></p>
+      <ul><li>Slide 1: Cover / Disclaimer slide — Prepared for [Company Name].</li><li>Slide 2: Executive Summary — Competitor cost vs ShareFile cost vs Savings.</li>
+      <li>Slide 3: Cost Comparison Detail + Sales Talk Track.</li><li>Slide 4: Deal Discount Summary (if deal price entered).</li></ul>
+      <p>The PowerPoint uses the Progress 2026 brand styling.</p></div></div>
+  </div>
+</section>
+
+<!-- ============ FORMULA REFERENCE ============ -->
+<section class="panel ref" id="tab-formula" hidden>
+  <h2>ShareFile Savings Calculator — Formula Reference</h2>
+  <p class="sub">All formulas used in this calculator. For legal review. Pricing verified May 2026.</p>
+  <h3>Section A — Competitive Savings (Price Book vs Competitor Stack)</h3>
+  <div class="tbl-wrap"><table class="ref-t" id="formA"></table></div>
+  <h3>Section B — Deal Discount Savings</h3>
+  <div class="tbl-wrap"><table class="ref-t" id="formB"></table></div>
+  <h3>Legal Assumptions &amp; Disclaimers (for legal review)</h3>
+  <ol class="legal" id="legal"></ol>
+</section>
+
+<!-- ============ PRICE BOOK ============ -->
+<section class="panel ref" id="tab-pricebook" hidden>
+  <h2>Price Book</h2>
+  <p class="sub">All rates in $/user/year. These are the values the calculator uses in Price Book (SRP) mode. Notes verified May 2026.</p>
+  <h3>E-Sign</h3><div class="tbl-wrap"><table class="ref-t" id="pbE"></table></div>
+  <h3>File Sharing / Collaboration</h3><div class="tbl-wrap"><table class="ref-t" id="pbF"></table></div>
+  <h3>ShareFile Plans</h3><div class="tbl-wrap"><table class="ref-t" id="pbS"></table></div>
+</section>
+
+<!-- ============ PRICING SOURCES ============ -->
+<section class="panel ref" id="tab-sources" hidden>
+  <h2>Verified Competitor Pricing Sources</h2>
+  <p class="sub">Agent-scraped from official vendor pricing pages — May 2026 · For legal review only. Prices subject to change. Click a source to cross-check the live vendor page.</p>
+  <div class="tbl-wrap"><table class="ref-t" id="srcT"></table></div>
+  <p class="sub"><b>Legend — Status:</b> MATCH = within ±$1/yr of Price Book &nbsp;|&nbsp; MISMATCH = price differs &gt;$1/yr (update Price Book) &nbsp;|&nbsp; NOT_FOUND = plan not identified &nbsp;|&nbsp; MANUAL_REQUIRED = page blocked/JS-only — click Source URL to verify &nbsp;|&nbsp; CUSTOM_PRICING = enterprise custom pricing</p>
+  <p class="sub"><b>Summary (May 2026):</b> 12 Matches · 0 Mismatches · 0 Not Found · 2 Custom Pricing · 2 New Plans</p>
+</section>
+</main>
+<footer>Confidential &nbsp;|&nbsp; Progress ShareFile Savings Calculator &nbsp;|&nbsp; For internal sales use only. The PPT output is intended for customer-facing use.</footer>
+
+<dialog id="msg"><div class="dh" id="msgH"></div><div class="db" id="msgB"></div><div class="df"><button type="button" id="msgOk">OK</button></div></dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<script>
+"use strict";
+/* =====================================================================
+   PRICE BOOK  —  edit these tables to update pricing (all $/user/year)
+   Mirrors the "Price Book" sheet of the Excel workbook.
+   ===================================================================== */
+const PRICE_BOOK = {
+  // 'Price Book'!A2:E6  [provider, pricing model, annual, monthly, notes]
+  esign: [
+    ["DocuSign","PUPM",300,540,"Standard; 100 env/user/yr. $25/mo annual, $45/mo monthly. Source: docusign.com May 2026"],
+    ["Adobe Acrobat Sign","PUPM",287.88,287.88,"Acrobat Pro for Teams; 150 tx/user/yr. Annual commitment only - no monthly list price. Source: adobe.com May 2026"],
+    ["Dropbox Sign","PUPM",300,360,"Standard (Teams); unlimited sign requests. $25/mo annual, $30/mo monthly. Source: sign.dropbox.com May 2026"],
+    ["Box Sign","PUPM",0,0,"Bundled in Box Business plans (Starter+). Not sold standalone. Enter via File Sharing tool selection."],
+    ["Other / Unknown","Manual",0,0,"Enter actual annual cost manually"]
+  ],
+  // 'Price Book'!A9:D26  [provider, annual, monthly, notes]
+  fileSharing: [
+    ["M365 Business Basic",72,86.4,"CURRENT: $6/mo annual - rising to $7/mo after Jul 1 2026. 1TB OneDrive + Teams. Source: microsoft.com May 2026"],
+    ["M365 Business Standard",150,180,"CURRENT: $12.50/mo annual - rising to $14/mo after Jul 1 2026. Full Office + Teams. Source: microsoft.com May 2026"],
+    ["M365 Business Premium",264,316.8,"No Jul 2026 price change. Includes Intune + Defender. Source: microsoft.com May 2026"],
+    ["Google Workspace Starter",84,100.8,"30GB pooled storage; Gemini AI included. Source: workspace.google.com May 2026"],
+    ["Google Workspace Standard",168,201.6,"2TB pooled; Meet recording; e-sign included. Source: workspace.google.com May 2026"],
+    ["Google Workspace Business Plus",276,316.8,"5TB pooled; eDiscovery & audit. $23/mo annual. Source: workspace.google.com May 2026"],
+    ["Box Business Starter",60,84,"Min 3 users; 100GB shared; Box Sign (10 docs/user/mo). Source: box.com May 2026"],
+    ["Box Business",180,240,"Min 3 users; unlimited storage; Box Sign included. Source: box.com May 2026"],
+    ["Box Business Plus",300,396,"Adds Box Relay automation; unlimited Box Sign. Source: box.com May 2026"],
+    ["Dropbox Business Standard",180,216,"Formerly Business; 3+ users; 5TB team storage; Sign included. Source: dropbox.com May 2026"],
+    ["Dropbox Business Advanced",288,360,"Formerly Business Plus; 3+ users; unlimited storage; advanced admin. Source: dropbox.com May 2026"],
+    ["Egnyte Business",264,264,"Annual billing only - no monthly list price. $22/mo annual. Source: egnyte.com May 2026"],
+    ["Egnyte Enterprise Lite",468,468,"Annual billing only - no monthly list price. $39/mo annual. Source: egnyte.com May 2026"],
+    ["Egnyte Elite",576,576,"Annual billing only - no monthly list price. $48/mo annual. Source: egnyte.com May 2026"],
+    ["Kiteworks",0,0,"Enterprise custom pricing - contact sales. kiteworks.com"],
+    ["ShareFile Advanced",198,217.8,"Source: sharefile.com/plans-pricing May 2026. $16.50/user/mo annual | $18.15/user/mo monthly. Min 3 users."],
+    ["ShareFile Premium",312,343.2,"Source: sharefile.com/plans-pricing May 2026. $26.00/user/mo annual | $28.60/user/mo monthly. Min 3 users."],
+    ["ShareFile Virtual Data Room",831.6,924,"Source: sharefile.com/plans-pricing May 2026. $69.30/user/mo annual | $77.00/user/mo monthly. Min 5 users."]
+  ],
+  // 'Price Book'!A29:D32  [plan, annual, monthly, notes]
+  sharefile: [
+    ["Advanced",198,217.8,"Source: sharefile.com/plans-pricing May 2026. $16.50/user/mo annual | $18.15/user/mo monthly. Min 3 users."],
+    ["Premium",312,343.2,"Source: sharefile.com/plans-pricing May 2026. $26.00/user/mo annual | $28.60/user/mo monthly. Min 3 users."],
+    ["Industry Advantage",500.04,549.96,"Source: sharefile.com/plans-pricing May 2026. $41.67/user/mo annual | $45.83/user/mo monthly. Min 3 users."],
+    ["Virtual Data Room",831.6,924,"Source: sharefile.com/plans-pricing May 2026. $69.30/user/mo annual | $77.00/user/mo monthly. Min 5 users."]
+  ]
+};
+// Dropdown lists exactly as in the Excel data validation
+const ESIGN_LIST = PRICE_BOOK.esign.map(r => r[0]);                          // 'Price Book'!A2:A6
+const FS_LIST = ["Box Business Starter","Box Business","Box Business Plus","Dropbox Business Standard",
+  "Dropbox Business Advanced","Egnyte Business","Egnyte Enterprise Lite","Egnyte Elite","Kiteworks",
+  "ShareFile Advanced","ShareFile Premium","ShareFile Virtual Data Room"];      // 'Price Book'!A15:A26
+const PLAN_LIST = ["Advanced","Premium","Industry Advantage","Virtual Data Room"];
+
+// Default values = values saved in the workbook
+const DEFAULTS = {prospect:"ABC",users:"200",esign:"Adobe Acrobat Sign",fs:"Box Business Starter",
+  plan:"Premium",billing:"Annual",mode:"Price Book (SRP)",f8:"",f9:"",f10:"",deal:"250"};
+const BLANK = {prospect:"",users:"",esign:"",fs:"",plan:"",billing:"Annual",mode:"Price Book (SRP)",f8:"",f9:"",f10:"",deal:""};
+
+/* ===================== Reference content ===================== */
+const FORMULA_A = [
+  ["E-Sign Annual Spend","Users × E-Sign $/User/Yr","No. of Users; E-Sign rate from Price Book or manual entry","Rate = Annual or Monthly equivalent from Price Book"],
+  ["File Sharing Annual Spend","Users × FS $/User/Yr","No. of Users; FS rate from Price Book or manual entry","Rate column selected based on Billing Type"],
+  ["Competitor Stack Total ($/Yr)","E-Sign Annual Spend + FS Annual Spend","E-Sign spend + FS spend","Total annual cost of current tech stack, all users combined"],
+  ["ShareFile Annual Cost ($/Yr)","Users × SF $/User/Yr","No. of Users; SF plan rate from Price Book or manual","Rate from Price Book annual or monthly column"],
+  ["Annual Savings ($/Yr)","Competitor Stack Total − ShareFile Annual Cost","Stack total − ShareFile cost","How much the customer saves per year by switching"],
+  ["Savings % (Cost Reduction)","(Competitor Stack Total − ShareFile Total) ÷ Competitor Stack Total × 100","Annual savings ÷ Stack total","Expressed as percentage; 0 if ShareFile costs more"],
+  ["Savings ROI %","Annual Savings ÷ ShareFile Annual Cost × 100","Annual savings ÷ ShareFile cost","Return on investment in ShareFile"],
+  ["Per-User Savings / Year","Annual Savings ÷ Number of Users","Annual savings ÷ Users","Per employee annual savings"],
+  ["3-Year Savings $","Annual Savings × 3","Annual savings × 3","Flat pricing assumed — no escalators, no discounts"]
+];
+const FORMULA_B = [
+  ["ShareFile SRP $/User/Yr","From Price Book — Annual billing column","ShareFile Plan selection; always uses annual rate column","SRP = standard published list price, annual commitment"],
+  ["Deal Price $/User/Yr","Rep-entered","Manual input","Rep responsible for accuracy; not validated against floor pricing"],
+  ["Deal Discount %","(SRP − Deal Price) ÷ SRP × 100","(SRP − Deal) ÷ SRP","Percentage off list price being offered"],
+  ["Deal Discount $/User/Yr","SRP − Deal Price","SRP − Deal","Dollar value of discount per user per year"],
+  ["Total Effective Savings %","(Competitor Stack Total − Deal Price × Users) ÷ Competitor Stack Total × 100","(Stack − Deal × Users) ÷ Stack","Full story: current stack cost vs deal price for all users"],
+  ["Total Effective Savings $/Yr","Competitor Stack Total − (Deal Price × Users)","Stack − (Deal × Users)","Annual dollar savings at deal price vs current stack"],
+  ["3-Year Deal Savings $","Total Effective Savings $/Yr × 3","Effective savings × 3","Flat pricing assumed — no escalators"]
+];
+const LEGAL = [
+  "All competitor prices sourced from public vendor pricing pages as of April 9, 2026. ShareFile makes no representation that these prices are current at the time of use.",
+  "Monthly pricing reflects the vendor's published monthly (pay-as-you-go) rate where available. Where no monthly rate is published, the annual rate is used as a proxy (see Note 7).",
+  "Manual Entry mode allows representatives to input customer-specific pricing. These figures are not verified by ShareFile and are the sole responsibility of the sales representative.",
+  "Savings calculations use simple arithmetic comparisons only. They do NOT account for: taxes, implementation costs, training, migration, volume discounts, promotional pricing, or contractual escalators.",
+  "3-Year projections assume flat pricing with no changes. Actual savings may vary.",
+  "Microsoft 365 Business Basic and Standard prices will increase effective July 1, 2026. Current pricing is reflected in this version. Update Price Book after July 1, 2026.",
+  "Egnyte Business, Egnyte Enterprise Lite, and Egnyte Elite do not publicly list a monthly billing option. Monthly column uses the annual rate as a proxy for all three plans.",
+  "Kiteworks does not publish list pricing. $0 placeholder shown. Representative must enter custom pricing via Manual Entry mode.",
+  "Deal Discount % reflects a representative's proposed discount and is NOT a commitment by ShareFile. Final pricing is subject to approval per ShareFile's discount authorization policy.",
+  "This calculator is for INTERNAL SALES USE ONLY and should not be shared with customers in its raw form. The PPT output is intended for customer-facing use."
+];
+// 'Pricing Sources' sheet: [vendor, category, pbAnnual, pbMonthly, scrAnnual, scrMonthly, dA, dM, status, url, quote, notes]  (null = —)
+const SOURCES = [
+  ["E-SIGN"],
+  ["Adobe Acrobat Sign","E-Sign",287.88,287.88,null,null,null,null,"MANUAL_REQUIRED","https://www.adobe.com/acrobat/pricing.html","","Page timed out on both fetch attempts. Verify manually at adobe.com/acrobat/pricing.html. Price Book: $23.99/mo ($287.88/yr) annual only."],
+  ["Box Sign","E-Sign",0,0,0,0,0,0,"CUSTOM_PRICING","https://www.box.com/pricing","Bundled in Box Business plans (Starter+). Not sold as standalone.","Box Sign is bundled — not a separate line item. $0 correct. Enter via File Sharing tool selection."],
+  ["DocuSign","E-Sign",300,540,300,null,0,null,"MATCH","https://ecom.docusign.com/plans-and-pricing/esignature","Standard — $25/month per user ($300 billed annually). 100 envelopes/user/yr. Business Pro — $40/mo annual. Business Pro Unlimited — $50/mo. Professional — $60/mo.","Annual confirmed MATCH: $25/mo = $300/yr. Monthly billing: page showed same $25/mo for Standard (no monthly premium shown) — verify $45/mo ($540/yr) manually as Price Book may be overstated."],
+  ["Dropbox Sign","E-Sign",300,360,null,null,null,null,"MANUAL_REQUIRED","https://sign.dropbox.com/pricing","","sign.dropbox.com/pricing returned 404. Verify manually. Price Book: $25/mo annual ($300/yr)."],
+  ["FILE SHARING"],
+  ["Box Business","File Sharing",180,240,null,null,null,null,"MANUAL_REQUIRED","https://www.box.com/pricing","","JavaScript-rendered page — see Box Business Starter note. Price Book: $15/mo annual ($180/yr)."],
+  ["Box Business Plus","File Sharing",300,396,null,null,null,null,"MANUAL_REQUIRED","https://www.box.com/pricing","","JavaScript-rendered page — see Box Business Starter note. Price Book: $25/mo annual ($300/yr)."],
+  ["Box Business Starter","File Sharing",60,84,null,null,null,null,"MANUAL_REQUIRED","https://www.box.com/pricing","","box.com/pricing is JavaScript-rendered — pricing data not in HTML. Verify manually. Price Book: $5/mo annual ($60/yr)."],
+  ["Dropbox Business Advanced","File Sharing",288,360,288,null,0,null,"MATCH","https://www.dropbox.com/plans","Advanced Plan — $24/user/month (annual). Starts at 15 TB team storage. Dropbox Sign included (3 sign requests/mo).","Annual price confirmed ($24/mo = $288/yr). Monthly billing price not clearly shown on page — verify $30/mo ($360/yr) manually."],
+  ["Dropbox Business Standard","File Sharing",180,216,180,null,0,null,"MATCH","https://www.dropbox.com/plans","Standard Plan — $15/user/month (annual). Starts at 3 TB team storage. Dropbox Sign included (3 sign requests/mo).","Annual price confirmed ($15/mo = $180/yr). Monthly billing price not clearly shown on page — verify $18/mo ($216/yr) manually."],
+  ["Egnyte Enterprise Lite","File Sharing",468,468,468,null,0,null,"NEW","https://www.egnyte.com/pricing","Enterprise Lite — $39/user/month (annual). Source: egnyte.com May 2026.","NEW plan added May 2026. Annual billing only - no monthly list price. $39/mo annual = $468/yr."],
+  ["Egnyte Elite","File Sharing",576,576,576,null,0,null,"NEW","https://www.egnyte.com/pricing","Elite — $48/user/month (annual). Source: egnyte.com May 2026.","NEW plan added May 2026. Annual billing only - no monthly list price. $48/mo annual = $576/yr."],
+  ["Egnyte Business","File Sharing",264,240,264,null,0,null,"MATCH","https://www.egnyte.com/pricing","Business — $22/user/month (annual). 100 GB/user storage. E-signature not included.","Price Book updated to $264/yr ($22/mo annual) to match egnyte.com. No monthly list price published — annual rate used as proxy. Source: egnyte.com May 2026."],
+  ["Google Workspace Business Plus","File Sharing",276,316.8,276,null,0,null,"MATCH","https://workspace.google.com/pricing","","Price updated to $276/yr ($23/mo annual). Screenshot confirms $23/mo annual billing. Monthly (pay-as-you-go) unchanged at $316.80/yr. Source: workspace.google.com May 2026."],
+  ["Google Workspace Standard","File Sharing",168,201.6,null,null,null,null,"MANUAL_REQUIRED","https://workspace.google.com/pricing","","JavaScript-rendered page — see Google Workspace Starter note. Price Book: $14/mo annual ($168/yr)."],
+  ["Google Workspace Starter","File Sharing",84,100.8,null,null,null,null,"MANUAL_REQUIRED","https://workspace.google.com/pricing","","workspace.google.com/pricing is JavaScript-rendered — pricing data not in HTML. Verify manually. Price Book: $7/mo annual ($84/yr)."],
+  ["Kiteworks","File Sharing",0,0,0,0,0,0,"CUSTOM_PRICING","https://www.kiteworks.com/pricing/","No published pricing — contact sales for a custom enterprise quote.","Confirmed custom/enterprise pricing only. $0 placeholder correct."],
+  ["M365 Business Basic","File Sharing",72,86.4,72,86.4,0,0,"MATCH","https://www.microsoft.com/en-us/microsoft-365/business/microsoft-365-business-basic","$6.00 user/month, paid yearly | $7.20 user/month with a monthly subscription","Confirmed match. Note: price rises to $7/mo annual after Jul 1 2026."],
+  ["M365 Business Standard","File Sharing",150,180,150,180,0,0,"MATCH","https://www.microsoft.com/en-us/microsoft-365/business/microsoft-365-business-standard","$12.50 user/month, paid yearly | $15.00 user/month with a monthly subscription","Confirmed match. Note: price rises to $14/mo annual after Jul 1 2026."],
+  ["SHAREFILE"],
+  ["ShareFile Advanced","ShareFile",198,217.8,198,217.8,0,0,"MATCH","https://www.sharefile.com/pricing","Advanced — $16.50/user/month (annual) | $18.15/user/month (monthly). Min 3 users.","Confirmed match on both annual and monthly."],
+  ["ShareFile Industry Advantage","ShareFile",500.04,549.96,500.04,549.96,0,0,"MATCH","https://www.sharefile.com/pricing","Industry Advantage — $41.67/user/month (annual) | $45.83/user/month (monthly). Min 3 users.","Confirmed match on both annual and monthly."],
+  ["ShareFile Premium","ShareFile",312,343.2,312,343.2,0,0,"MATCH","https://www.sharefile.com/pricing","Premium — $26.00/user/month (annual) | $28.60/user/month (monthly). Min 3 users.","Confirmed match on both annual and monthly."]
+];
+
+/* ===================== Helpers ===================== */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };  // blank cell = 0, like Excel
+// Excel cell formats
+const fmtMoney2 = v => (v < 0 ? "-" : "") + "$" + Math.abs(v).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtPct1 = v => (v * 100).toFixed(1) + "%";
+// VBA Format() equivalents used in the slides
+const vbRound = (v, d) => { const f = Math.pow(10, d); return Math.sign(v) * Math.round(Math.abs(v) * f + 1e-9) / f; };
+const f0 = v => { const r = vbRound(v, 0); return (r < 0 ? "-" : "") + "$" + Math.abs(r).toLocaleString("en-US"); };            // "$#,##0"
+const f2 = v => { const r = vbRound(v, 2); return (r < 0 ? "-" : "") + "$" + Math.abs(r).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}); }; // "$#,##0.00"
+const fp = v => vbRound(v * 100, 0) + "%";                                                                                   // "0%"
+const lookup = (table, key) => table.find(r => r[0] === key);
+
+/* ===================== Calculation engine (mirrors 'Sales Input' formulas) ===================== */
+function compute(i) {
+  const users = num(i.users);
+  const o = {};
+  // C7 Line Size
+  o.lineSize = users <= 25 ? "Micro" : users <= 200 ? "SMB" : users <= 5000 ? "Mid-Market" : "Enterprise";
+  const monthly = i.billing === "Monthly";
+  const manual = i.mode === "Manual Entry";
+  const e = lookup(PRICE_BOOK.esign, i.esign);
+  const f = lookup(PRICE_BOOK.fileSharing, i.fs);
+  const s = lookup(PRICE_BOOK.sharefile, i.plan);
+  o.esignModel = e ? e[1] : "PUPM";                                             // C16
+  o.esignRate = manual ? num(i.f8) : (e ? (monthly ? e[3] : e[2]) : 0);         // C17
+  o.esignSpend = users * o.esignRate;                                           // C18
+  o.fsRate = manual ? num(i.f9) : (f ? (monthly ? f[2] : f[1]) : 0);            // C19
+  o.fsSpend = users * o.fsRate;                                                 // C20
+  o.current = o.esignSpend + o.fsSpend;                                         // C21
+  o.sfRate = manual ? num(i.f10) : (s ? (monthly ? s[2] : s[1]) : 0);           // C22
+  o.sfCost = users * o.sfRate;                                                  // C23
+  o.savings = o.current - o.sfCost;                                             // C24
+  o.savingsPct = o.current ? o.savings / o.current : 0;                         // C25
+  o.perUser = users ? o.savings / users : 0;                                    // C26
+  o.threeYear = o.savings * 3;                                                  // C27
+  // Deal section
+  const deal = num(i.deal);
+  o.srp = s ? s[1] : 0;                                                         // C30 (always annual)
+  o.dealPrice = deal;                                                           // C31
+  o.dealPct = o.srp ? (o.srp - deal) / o.srp : 0;                               // C32
+  o.dealAmt = o.srp - deal;                                                     // C33
+  o.tesPct = o.current ? (o.current - deal * users) / o.current : 0;            // C34
+  o.tesAmt = o.current - deal * users;                                          // C35
+  o.deal3 = o.tesAmt * 3;                                                       // C36
+  o.users = users;
+  return o;
+}
+
+/* ===================== UI wiring ===================== */
+const FIELDS = ["prospect","users","esign","fs","plan","billing","mode","f8","f9","f10","deal"];
+function fillSelect(el, items) {
+  el.innerHTML = '<option value="">— Select —</option>' + items.map(v => `<option>${esc(v)}</option>`).join("");
+}
+fillSelect($("esign"), ESIGN_LIST);
+fillSelect($("fs"), FS_LIST);
+fillSelect($("plan"), PLAN_LIST);
+
+function readInputs() { const o = {}; FIELDS.forEach(k => o[k] = $(k).value); return o; }
+function writeInputs(v) { FIELDS.forEach(k => { if (v[k] !== undefined) $(k).value = v[k]; }); }
+function save() { try { localStorage.setItem("sfCalcInputs", JSON.stringify(readInputs())); } catch (e) {} }
+function load() { try { const s = localStorage.getItem("sfCalcInputs"); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
+
+// Mirrors ApplyManualOverrideState: Price Book mode clears + locks F8:F10
+function applyManualOverrideState() {
+  const manual = $("mode").value === "Manual Entry";
+  ["f8","f9","f10"].forEach(k => { const el = $(k); if (!manual) el.value = ""; el.disabled = !manual; });
+  $("ovrState").textContent = manual ? "(enabled — Manual Entry mode)" : "(locked — switch Pricing Mode to Manual Entry)";
+}
+
+function setNeg(id, text, v) { const el = $(id); el.textContent = text; el.classList.toggle("neg", v < 0); }
+function render() {
+  // Users: whole number >= 0 (Excel data validation)
+  const u = $("users");
+  if (u.value !== "" && (!/^\d+$/.test(u.value))) u.setCustomValidity("Enter a whole number, 0 or greater"); else u.setCustomValidity("");
+  const i = readInputs(), o = compute(i);
+  $("lineSize").textContent = o.lineSize;
+  $("cModel").textContent = o.esignModel;
+  $("cESRate").textContent = fmtMoney2(o.esignRate);
+  $("cESSpend").textContent = fmtMoney2(o.esignSpend);
+  $("cFSRate").textContent = fmtMoney2(o.fsRate);
+  $("cFSSpend").textContent = fmtMoney2(o.fsSpend);
+  $("cCur").textContent = fmtMoney2(o.current);
+  $("cSFRate").textContent = fmtMoney2(o.sfRate);
+  $("cSF").textContent = fmtMoney2(o.sfCost);
+  setNeg("cSav", fmtMoney2(o.savings), o.savings);
+  setNeg("cPct", fmtPct1(o.savingsPct), o.savingsPct);
+  setNeg("cPU", fmtMoney2(o.perUser), o.perUser);
+  setNeg("c3", fmtMoney2(o.threeYear), o.threeYear);
+  $("srp").textContent = fmtMoney2(o.srp);
+  $("dealPct").textContent = fmtPct1(o.dealPct);
+  $("dealAmt").textContent = fmtMoney2(o.dealAmt);
+  $("tesPct").textContent = fmtPct1(o.tesPct);
+  $("tesAmt").textContent = fmtMoney2(o.tesAmt);
+  $("deal3").textContent = fmtMoney2(o.deal3);
+  // hero tiles
+  $("hCur").textContent = f0(o.current) + "/yr";
+  $("hCurS").textContent = (i.esign || "E-Sign") + " + " + (i.fs || "Collaboration");
+  $("hSfK").textContent = "ShareFile " + (i.plan || "");
+  $("hSf").textContent = f0(o.sfCost) + "/yr";
+  $("hSfS").textContent = (o.users > 0 && o.sfCost > 0 ? f2(o.sfCost / o.users / 12) + "/user/mo" : "N/A") + " · " + i.billing + " billing";
+  $("hSav").textContent = f0(o.savings) + "/yr";
+  $("hSavS").textContent = fp(o.savingsPct) + " cost reduction · " + f0(o.perUser) + "/user/yr · 3-yr " + f0(o.threeYear);
+  $("hSavTile").classList.toggle("neg", o.savings < 0);
+  $("negNote").hidden = !(o.savings < 0);
+  $("sumSub").textContent = o.users ? `${o.users.toLocaleString("en-US")} users · ${o.lineSize}` : "";
+  save();
+}
+
+FIELDS.forEach(k => $(k).addEventListener("input", render));
+$("mode").addEventListener("change", () => { applyManualOverrideState(); render(); });
+$("resetBtn").addEventListener("click", () => { writeInputs(BLANK); applyManualOverrideState(); render(); });
+
+// Tabs
+document.querySelectorAll("nav button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("nav button").forEach(x => x.setAttribute("aria-selected", x === b));
+  document.querySelectorAll(".panel").forEach(p => p.hidden = p.id !== "tab-" + b.dataset.tab);
+  try { localStorage.setItem("sfCalcTab", b.dataset.tab); } catch (e) {}
+}));
+
+// Message box (replaces VBA MsgBox)
+function msgBox(title, body, kind) {
+  $("msgH").textContent = title; $("msgH").className = "dh " + (kind || "");
+  $("msgB").textContent = body;
+  const d = $("msg"); if (typeof d.showModal === "function") d.showModal(); else alert(title + "\n\n" + body);
+}
+$("msgOk").addEventListener("click", () => $("msg").close());
+
+/* ===================== Reference tables ===================== */
+function buildRef() {
+  const ft = (rows) => "<tr><th>Metric</th><th>Formula</th><th>Inputs</th><th>Notes</th></tr>" +
+    rows.map(r => `<tr>${r.map((c,j) => `<td${j===0?' style="font-weight:600"':''}>${esc(c)}</td>`).join("")}</tr>`).join("");
+  $("formA").innerHTML = ft(FORMULA_A);
+  $("formB").innerHTML = ft(FORMULA_B);
+  $("legal").innerHTML = LEGAL.map(l => `<li>${esc(l)}</li>`).join("");
+  const m = v => v === null || v === undefined ? "—" : "$" + Number(v).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+  $("pbE").innerHTML = "<tr><th>Provider</th><th>Pricing Model</th><th>$/User/Yr (Annual)</th><th>$/User/Yr (Monthly)</th><th>Notes</th></tr>" +
+    PRICE_BOOK.esign.map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td class="n">${m(r[2])}</td><td class="n">${m(r[3])}</td><td>${esc(r[4])}</td></tr>`).join("");
+  const pb3 = rows => "<tr><th>Provider</th><th>$/User/Yr (Annual)</th><th>$/User/Yr (Monthly)</th><th>Notes</th></tr>" +
+    rows.map(r => `<tr><td>${esc(r[0])}</td><td class="n">${m(r[1])}</td><td class="n">${m(r[2])}</td><td>${esc(r[3])}</td></tr>`).join("");
+  $("pbF").innerHTML = pb3(PRICE_BOOK.fileSharing);
+  $("pbS").innerHTML = pb3(PRICE_BOOK.sharefile);
+  $("srcT").innerHTML = "<tr><th>Vendor</th><th>Category</th><th>Price Book<br>Annual</th><th>Price Book<br>Monthly</th><th>Scraped<br>Annual</th><th>Scraped<br>Monthly</th><th>Δ Annual</th><th>Δ Monthly</th><th>Status</th><th>Source URL</th><th>Page Quote</th><th>Validator Notes</th></tr>" +
+    SOURCES.map(r => r.length === 1 ? `<tr class="sec"><td colspan="12">${esc(r[0])}</td></tr>` :
+      `<tr><td style="font-weight:600;white-space:nowrap">${esc(r[0])}</td><td>${esc(r[1])}</td>` +
+      [2,3,4,5,6,7].map(j => `<td class="n">${m(r[j])}</td>`).join("") +
+      `<td><span class="status st-${esc(r[8])}">${esc(r[8])}</span></td>` +
+      `<td><a href="${esc(r[9])}" target="_blank" rel="noopener">${esc(r[9].replace(/^https?:\/\/(www\.)?/,""))}</a></td>` +
+      `<td style="min-width:220px">${esc(r[10])}</td><td style="min-width:260px">${esc(r[11])}</td></tr>`).join("");
+}
+buildRef();
+
+/* =====================================================================
+   EXPORT TO SLIDES  —  port of the VBA ExportSavings / BuildSlide* macros
+   Slide is 960 × 540 pt (16:9); coordinates below are the VBA values in pt.
+   ===================================================================== */
+const LOGO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABUgAAAC4CAYAAAAxKAYcAAAACXBIWXMAACE3AAAhNwEzWJ96AAAgAElEQVR4nO3dwXHbyNaG4Zd/3b10t9wIE4E5EQiOwHIALMMRWBOB4QhMR2CoGMDIERiKYKQIDG24vWIE/BcHGFCyJAJEA90gv6eK5RmbarZANNA43X16stlsEBERERERERERETlG//FdgdDNV5MISLb+6gG4Xk43hYfqiIiIiIiIiIiIiEMTzSB93nw1OQUWwIcX3vIFWCynm4fhaiUiIiIiIiIiIiIuKUD6jPlqkgKXwMmOt66By+V0k/VdJxEREREREREREXFPAdIt89XkAps1etbyR++wQGnuvFIiIiIiIiIiIiLSGwVIgflqMsMCo+cdi/qBBUqLzpUSERERERERERGR3h11gLTMM5oCnxwWu8aCrcpPKiIiIiIiIiIiErijDZDOV5NLLDi6K8/ovu6BVPlJRUREREREREREwnV0AdL5ahIDGe3zjO7rBlt2fzvQ54mIiIiIiIiIiEhDRxMgna8mERYY7ZpndF9XWKBUy+5FREREREREREQCcfAB0jLP6CXw2XddKPOTLqeb1HdFRERERERERERE5MADpPPVJME2TOorz+i+7rHZpNe+KyIiIiIiIiIiInLMDjJAWuYZXQBvPFdllxsgWU43he+KiIiIiIiIiIiIHKODCpCWeUYXwDu/NWntG7bjvfKTioiIiIiIiIiIDOggAqRbeUYvCW85fVNrLEi68F0RERERERERERGRYzH6AGmZZzQFzvzWxJl7bNl97rsiIiIiIiIiIiIih260AdIyz2gKnPutSW9+YBs5Fb4rIiIiIiIiIiIicqhGFyAtl9MvgA++6zKQL8BC+UlFRERERERERETcG1WAdL6apIw7z+i+1ths0sx3RURERERERERERA7JKAKk89XkAps1eih5Rvd1g23klPuuiIiIiIiIiIiIyCEIOkA6X00iIONw84zu6woLlBa+KyIiIiIiIiIiIjJmQQZIyzyjKfDJc1VCtsZm1So/qYiIiIiIiIiIyJ6CC5DOV5NLLDh6bHlG93WP5Se99l0RERERERERERGRsQkmQDpfTWbANcozuq8bLFB667siIiIiIiIiIiIiYxFMgBSOepd6l66wQKmW3YuIiIiIiIiIiOwQVIAU/s0/ugA++K7LiK2x3KSp74qIiIiIiIiIiIiELLgAaaVccr9AO9h3cQ8ky+km910RERERERERERGREAUbIK3MV5ME27RJuUn3d4MFSgvfFREREREREREREQlJ8AFS+HfZ/SXKT9rVNyBVflIREREREREREREzigBpZb6aRNhsUuUn3d8a28Qp810RERERERERERER30YVIK3MV5MYy0/6xnNVxuwOC5TmvisiIiIiIiIiIiLiyygDpJUyP+kCLbvv4gcWKC18V0RERERERERERGRoow6QwqP8pJ9912XkvgAL5ScVEREREREREZFjMvoAaaXMT7oA3vmtyajdY5s4Zb4rIiIiIiIiIiIiMoSDCZBWyvykGXDmtyajdoMFSnPfFREREREREREREenTwQVIK/PV5BLb8V75Sfd3hQVKC98VERERERERERER6cPBBkjh3/ykKfDJc1XGbI3lJk19V0RERERERERERMS1gw6QVuaryQzLT3ruuy4jdo/tdn/tuyIiIiIiIiIiIiKu/J/vCgxhOd3cLqebGHiPBfqkvTPg7/lqkpcBZxERERERcW+z45V6q5mIyHHR9fiIHEWAtLKcbq6X000EfMGWjkt758A/89UkK1MYiIiIiIiIiIiIjNZRBUgrZT7NCNuESPbzASjKzbBERERERERERERG6SgDpADL6eZhOd0kwFvgxnN1xuoE+DpfTYr5ahL7royIiIiIiIiIiEhb//FdAd+W000OxPPVJMHyR5z5rM9InQE/56vJX8vpZuG7Mq9IytdYPAC35X8XT14iIiIix2pWviIg3vq7kx0/t6buW91ifa18679FRETkSB19gLSynG6y+WpyDVyWr10dLPld6DlJIyyH6pi8e+Hvb7DOfF6+1KkXERGRQxUBF1gwNGb/fvoJdV+w+vNz+ec9j/tWt4iIyBhEWCxC123p5GiX2D+nXHafYiPQPzxXR+Q158An4G/gf9jNIMVuDiIiIiJjd4qt/MmBX8BXbOC4r0kMZ2X5X4F/sBU7GRaYFREZUs7u3dMP7RW3PEanwAKbKPQLu25vgGv0TCx7Cm4G6Xw1ibCOSDUb8XY53VwPWYfldFMAF2VezQXwZsjPF9nDm/L1GbjDztvMZ4VERERE9nBKGCu6zrBNST9gS/MzrH9V+KuSiIhgE9queT494jss2HqJnoelpWBmkM5Xk2i+mmTU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";
+const C = { deep:"00123C", navy:"00206B", green:"00B563", dkGreen1:"008246", dkGreen:"008963", blue:"0069E8",
+  ltNavy:"EEF5FF", line:"D2DCEB", dark:"1E1E1E", gray:"6E737D", wht:"FFFFFF", savGrn:"008963",
+  orange:"CC6600", ltOrng:"FFEBD2", foot:"A0B4DC", disc:"7891BE" };
+const P = v => v / 72;               // points → inches
+const TRADEMARK_URL = "https://www.progress.com/legal/trademarks";
+const DISC_P1A = "Copyright © 2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved. Progress and certain product names used herein are trademarks or registered trademarks of Progress Software Corporation and/or one of its subsidiaries or affiliates in the U.S. and/or other countries. See ";
+const DISC_P1B = " for appropriate markings. All rights in any other trademarks contained herein are reserved by their respective owners and their inclusion does not imply an endorsement, affiliation, or sponsorship as between Progress and the respective owners.";
+const DISC_P2 = "All pricing, pricing comparisons, and savings are estimates only and based in part on publicly available list prices at the time of publication and are provided for illustrative purposes only. Pricing, discounts, and plan features may change, differ by customer, and/or be subject to negotiated terms. No guarantee is made as to the accuracy or completeness of pricing information or competitor information. For the most current and accurate competitor pricing and other information, please refer directly to each competitor's website. All dollar amounts are in USD. All services are subject to final contract terms, and nothing herein constitutes a guarantee of pricing or service availability.";
+const ALIGN = {1:"left",2:"center",3:"right"}, VAL = {1:"top",3:"middle",4:"bottom"};
+
+function Rect(s, x, y, w, h, fill, lineColor, lineW) {
+  s.addShape("rect", { x:P(x), y:P(y), w:P(w), h:P(h), fill:{color:fill},
+    line: lineColor ? {color:lineColor, width:lineW} : {type:"none"} });
+}
+function Bx(s, text, x, y, w, h, size, bold, color, bg, al, val) {
+  s.addText(text, { x:P(x), y:P(y), w:P(w), h:P(h), fontFace:"Arial", fontSize:size, bold:bold, color:color,
+    fill:{color:bg}, align:ALIGN[al], valign:VAL[val], margin:[2,4,2,4], fit:"none", wrap:true });
+}
+function Ln(s, x1, y1, x2, y2, color, wt) {
+  s.addShape("line", { x:P(Math.min(x1,x2)), y:P(Math.min(y1,y2)), w:P(Math.abs(x2-x1)), h:P(Math.abs(y2-y1)), line:{color:color, width:wt} });
+}
+function Badge(s, n, x, y, fill) {
+  s.addText(String(n), { x:P(x), y:P(y), w:P(20), h:P(20), fontFace:"Arial", fontSize:9, bold:true, color:C.wht,
+    fill:{color:fill}, align:"center", valign:"middle", margin:0 });
+}
+function Logo(s, x, y, w, h) {
+  // keep logo aspect ratio (1352×184) inside the VBA box
+  const ar = 1352 / 184; let lw = w, lh = w / ar; if (lh > h) { lh = h; lw = h * ar; }
+  s.addImage({ data:LOGO, x:P(x), y:P(y), w:P(lw), h:P(lh) });   // top-aligned so header text boxes never cover it
+}
+function DisclaimerBanner(s) {
+  Rect(s, 0, 0, 960, 18, "FFC832");
+  Bx(s, "This pricing is for illustration purposes only. Do not download or print for further use. Please contact your Account Manager who will share the appropriate quote with you.",
+     8, 0, 944, 18, 8, true, "141414", "FFC832", 2, 3);
+}
+function BxDisclaimer(s, x, y, w, h, size, color, bg) {
+  const o = { fontFace:"Arial", fontSize:size, color:color };
+  s.addText([
+    { text:DISC_P1A, options:o },
+    { text:"Trademarks", options:Object.assign({ hyperlink:{url:TRADEMARK_URL} }, o) },
+    { text:DISC_P1B, options:Object.assign({ breakLine:true }, o) },
+    { text:DISC_P2, options:o }
+  ], { x:P(x), y:P(y), w:P(w), h:P(h), fill:{color:bg}, align:"left", valign:"top", margin:[2,4,2,4], fit:"none", wrap:true });
+}
+
+function buildSlideCover(pptx, d) {
+  const s = pptx.addSlide(); s.background = { color:C.wht };
+  Rect(s, 0, 0, 960, 72, C.deep);
+  Bx(s, "Progress ShareFile  |  Savings Analysis", 20, 10, 660, 52, 18, true, C.wht, C.deep, 1, 3);
+  Logo(s, 718, 12, 228, 48);
+  Rect(s, 0, 72, 960, 28, C.navy);
+  Bx(s, "Prepared for:   " + d.prospect, 20, 74, 920, 24, 13, false, C.ltNavy, C.navy, 1, 3);
+  Bx(s, "LEGAL DISCLAIMER", 60, 114, 840, 22, 18, true, C.navy, C.wht, 1, 3);
+  Ln(s, 60, 138, 900, 138, C.navy, 1.5);
+  const o = { fontFace:"Arial", fontSize:18, color:"646973" };
+  s.addText([
+    { text:DISC_P1A, options:o },
+    { text:"Trademarks", options:Object.assign({ hyperlink:{url:TRADEMARK_URL} }, o) },
+    { text:DISC_P1B, options:o }
+  ], { x:P(60), y:P(146), w:P(840), h:P(128), fill:{color:C.wht}, align:"left", valign:"top", margin:[2,4,2,4], fit:"none" });
+  Ln(s, 60, 278, 900, 278, "DCE1EB", 0.5);
+  Bx(s, DISC_P2, 60, 284, 840, 162, 18, false, "646973", C.wht, 1, 1);
+  Rect(s, 0, 452, 960, 88, C.deep);
+  Bx(s, "Confidential   |   Progress ShareFile Savings Calculator", 20, 492, 920, 28, 10, false, C.foot, C.deep, 2, 3);
+  DisclaimerBanner(s);
+}
+
+function buildSlide1(pptx, d) {
+  const s = pptx.addSlide(); s.background = { color:C.wht };
+  Rect(s, 0, 0, 960, 144, C.deep);
+  Rect(s, 0, 0, 960, 5, C.green);
+  Logo(s, 700, 20, 248, 66);
+  Bx(s, "PREPARED FOR", 28, 22, 300, 14, 8, false, C.green, C.deep, 1, 3);
+  Bx(s, d.prospect, 28, 38, 660, 52, 32, true, C.wht, C.deep, 1, 3);
+  Bx(s, d.fDate + "   |   " + d.fBill + " billing", 28, 94, 660, 16, 9, false, C.ltNavy, C.deep, 1, 3);
+  Bx(s, d.users + " Users   |   " + d.lineSize + "   |   Replacing: " + d.esign + " + " + d.fs, 28, 112, 900, 16, 9, false, C.ltNavy, C.deep, 1, 3);
+  Bx(s, "SAVINGS ANALYSIS — SHAREFILE " + d.plan.toUpperCase(), 28, 128, 680, 16, 9, false, C.green, C.deep, 1, 3);
+  const pY = 148, pH = 140;
+  Rect(s, 16, pY, 286, pH, C.wht, C.line, 1);
+  Bx(s, "CURRENT ANNUAL COST", 26, pY+10, 266, 16, 10, true, C.navy, C.wht, 1, 3);
+  Bx(s, d.fCurr, 26, pY+30, 266, 60, 36, true, C.dark, C.wht, 1, 3);
+  Ln(s, 26, pY+96, 292, pY+96, C.line, 0.5);
+  Bx(s, "e-Sign + Collaboration combined", 26, pY+102, 266, 16, 10, false, C.gray, C.wht, 1, 3);
+  Bx(s, d.esign + " + " + d.fs, 26, pY+120, 266, 16, 9, false, C.navy, C.wht, 1, 3);
+  Rect(s, 320, pY, 286, pH, C.ltNavy);
+  Bx(s, "SHAREFILE " + d.plan.toUpperCase(), 330, pY+10, 266, 16, 10, true, C.navy, C.ltNavy, 1, 3);
+  Bx(s, d.fSF, 330, pY+30, 266, 60, 36, true, C.blue, C.ltNavy, 1, 3);
+  Ln(s, 330, pY+96, 596, pY+96, C.line, 0.5);
+  Bx(s, d.fRate + " per user / month", 330, pY+102, 266, 16, 10, false, C.blue, C.ltNavy, 1, 3);
+  Bx(s, "e-Sign + Portals + AI included", 330, pY+120, 266, 16, 9, false, C.navy, C.ltNavy, 1, 3);
+  Rect(s, 624, pY, 320, pH, C.savGrn);
+  Bx(s, "ANNUAL SAVINGS", 634, pY+10, 300, 16, 10, true, C.wht, C.savGrn, 1, 3);
+  Bx(s, d.fSavNum, 634, pY+30, 300, 60, 36, true, C.wht, C.savGrn, 1, 3);
+  Ln(s, 634, pY+96, 934, pY+96, "006446", 0.5);
+  Bx(s, d.fSavPct + " cost reduction", 634, pY+102, 300, 16, 11, true, C.wht, C.savGrn, 1, 3);
+  Bx(s, d.fPU + " saved per employee", 634, pY+120, 300, 16, 9, false, "C8EBD7", C.savGrn, 1, 3);
+  const mY = 296;
+  Rect(s, 0, mY, 960, 60, C.ltNavy);
+  Bx(s, d.fSavPct, 20, mY+2, 170, 56, 32, true, C.blue, C.ltNavy, 1, 3);
+  Bx(s, "Cost Reduction", 194, mY+2, 220, 56, 13, true, C.navy, C.ltNavy, 1, 3);
+  Ln(s, 430, mY+8, 430, mY+52, C.line, 1);
+  Bx(s, d.fPU, 446, mY+2, 270, 56, 22, true, C.dkGreen1, C.ltNavy, 1, 3);
+  Bx(s, "Saved Per Employee / Year", 720, mY+2, 222, 56, 12, false, C.gray, C.ltNavy, 1, 3);
+  const svY = 364;
+  Rect(s, 0, svY, 6, 54, C.green);
+  Bx(s, d.prospect + " replaces " + d.esign + " + " + d.fs + " with ShareFile " + d.plan + ", saving " + d.fSavNum +
+     "/yr (" + d.fSavPct + " cost reduction)   |   3-Year Savings: " + d.f3Yr, 14, svY, 936, 54, 12, false, C.dark, C.wht, 1, 3);
+  Rect(s, 0, 424, 960, 116, C.deep);
+  Bx(s, "Confidential   |   Prepared by Progress ShareFile   |   " + d.fDate, 20, 426, 920, 16, 8, false, C.foot, C.deep, 1, 3);
+  BxDisclaimer(s, 8, 444, 944, 94, 9, C.disc, C.deep);
+  DisclaimerBanner(s);
+}
+
+function buildSlide2(pptx, d) {
+  const s = pptx.addSlide(); s.background = { color:"FCFDFF" };
+  Rect(s, 0, 0, 960, 80, C.deep);
+  Rect(s, 0, 0, 960, 5, C.green);
+  Logo(s, 700, 20, 248, 54);
+  Bx(s, "Cost Comparison: ShareFile " + d.plan + " vs " + d.esign + " + " + d.fs, 16, 20, 672, 30, 14, true, C.wht, C.deep, 1, 3);
+  Bx(s, d.prospect + "   |   " + d.users + " Users   |   " + d.lineSize + "   |   " + d.fBill + " billing", 16, 54, 900, 22, 10, false, C.ltNavy, C.deep, 1, 3);
+  Rect(s, 0, 80, 960, 24, C.navy);
+  Bx(s, "Pricing at " + d.fBill + " rate — cost analysis for " + d.users + " users", 16, 82, 920, 20, 10, false, C.ltNavy, C.navy, 1, 3);
+  Rect(s, 0, 104, 476, 174, C.wht, C.line, 0.75);
+  Bx(s, "CURRENT ANNUAL SPEND", 12, 108, 450, 18, 10, true, C.navy, C.wht, 1, 3);
+  Ln(s, 12, 128, 464, 128, C.line, 0.5);
+  Bx(s, d.esign, 12, 132, 306, 22, 10, false, C.dark, C.wht, 1, 3);
+  Bx(s, d.fESign, 322, 132, 140, 22, 11, true, C.navy, C.wht, 3, 3);
+  Ln(s, 12, 156, 464, 156, C.line, 0.5);
+  Bx(s, "Collaboration: " + d.fs, 12, 160, 306, 22, 10, false, C.dark, C.wht, 1, 3);
+  Bx(s, d.fFSyr, 322, 160, 140, 22, 11, true, C.navy, C.wht, 3, 3);
+  Ln(s, 12, 184, 464, 184, C.line, 1);
+  Bx(s, "Total Current Spend", 12, 188, 306, 24, 11, true, C.dark, C.wht, 1, 3);
+  Bx(s, d.fCurr, 322, 188, 140, 24, 13, true, C.navy, C.wht, 3, 3);
+  Bx(s, "per year (e-Sign + Collaboration combined)", 12, 214, 452, 16, 9, false, C.gray, C.wht, 1, 3);
+  Bx(s, d.fBill + " billing rate   |   " + d.fFSMo + " /user/mo for " + d.fs, 12, 232, 452, 16, 9, false, C.gray, C.wht, 1, 3);
+  Rect(s, 484, 104, 476, 174, C.ltNavy);
+  Bx(s, "SHAREFILE " + d.plan.toUpperCase() + " - REPLACEMENT COST", 496, 108, 456, 18, 10, true, C.navy, C.ltNavy, 1, 3);
+  Ln(s, 496, 128, 948, 128, C.line, 0.5);
+  Bx(s, "ShareFile " + d.plan, 496, 132, 306, 22, 10, false, C.dark, C.ltNavy, 1, 3);
+  Bx(s, d.fSF, 806, 132, 140, 22, 11, true, C.blue, C.ltNavy, 3, 3);
+  Ln(s, 496, 156, 948, 156, C.line, 1);
+  Bx(s, "Total ShareFile Cost", 496, 160, 306, 24, 11, true, C.dark, C.ltNavy, 1, 3);
+  Bx(s, d.fSF, 806, 160, 140, 24, 13, true, C.blue, C.ltNavy, 3, 3);
+  Bx(s, d.fRate + " per user / month", 496, 186, 452, 16, 10, false, C.blue, C.ltNavy, 1, 3);
+  Bx(s, "Includes: e-Sign + Client Portals + AI features", 496, 204, 452, 16, 9, false, C.navy, C.ltNavy, 1, 3);
+  Bx(s, "Replaces: " + d.esign + " + " + d.fs, 496, 222, 452, 16, 9, false, C.dark, C.ltNavy, 1, 3);
+  Bx(s, "3-Year savings: " + d.f3Yr, 496, 240, 452, 16, 9, false, C.dkGreen, C.ltNavy, 1, 3);
+  const sBY = 278;
+  Rect(s, 0, sBY, 960, 52, C.savGrn);
+  Bx(s, d.fSavNum + " /yr", 16, sBY+4, 200, 44, 22, true, C.wht, C.savGrn, 1, 3);
+  Bx(s, "Annual Savings", 220, sBY+4, 158, 44, 11, true, "C8EBD7", C.savGrn, 1, 3);
+  Ln(s, 386, sBY+8, 386, sBY+44, "006446", 1);
+  Bx(s, d.fSavPct, 398, sBY+4, 130, 44, 22, true, C.wht, C.savGrn, 1, 3);
+  Bx(s, "Cost Reduction", 532, sBY+4, 120, 44, 11, true, "C8EBD7", C.savGrn, 1, 3);
+  Ln(s, 658, sBY+8, 658, sBY+44, "006446", 1);
+  Bx(s, d.f3Yr, 672, sBY+4, 198, 44, 20, true, C.wht, C.savGrn, 1, 3);
+  Bx(s, "3-Year Savings", 874, sBY+4, 82, 44, 10, true, "C8EBD7", C.savGrn, 1, 3);
+  Rect(s, 0, 330, 960, 130, C.ltNavy);
+  Bx(s, "SALES TALK TRACK", 16, 334, 300, 14, 9, true, C.navy, C.ltNavy, 1, 3);
+  const steps = [
+    [12, "1", C.navy, "ASK", "What do you pay for " + d.esign + " today?", "e-Sign: " + d.fESign + " / year", C.navy],
+    [248, "2", C.navy, "ASK", "What does " + d.fs + " cost per user?", d.users + " users x " + d.fFSMo + " /mo = " + d.fFSyr + " /yr", C.navy],
+    [484, "3", C.navy, "CALCULATE", "Add both, then subtract ShareFile " + d.plan, "You save: " + d.fSavNum + " (" + d.fSavPct + ")", C.navy],
+    [720, "4", C.dkGreen, "CLOSE", "ShareFile replaces both tools at " + d.fRate + " /user/mo", "3-Year savings: " + d.f3Yr + "   |   Book 30-min trial today", C.dkGreen]
+  ];
+  steps.forEach(([x, n, bc, act, head, body, hc]) => {
+    Badge(s, n, x, 352, bc);
+    Bx(s, act, x + 24, 352, n === "4" ? 192 : 196, 20, 8, true, hc, C.ltNavy, 1, 3);
+    Bx(s, head, x, 374, 228, 40, 9, true, hc, C.ltNavy, 1, 1);
+    Bx(s, body, x, 416, 228, 38, 9, false, C.dark, C.ltNavy, 1, 1);
+  });
+  Rect(s, 0, 460, 960, 80, C.deep);
+  Bx(s, "Confidential   |   Progress ShareFile Savings Calculator   |   " + d.fDate, 16, 462, 920, 14, 7, false, C.foot, C.deep, 2, 3);
+  BxDisclaimer(s, 8, 478, 944, 60, 9, C.disc, C.deep);
+  DisclaimerBanner(s);
+}
+
+function buildSlide3(pptx, d) {
+  const s = pptx.addSlide(); s.background = { color:C.wht };
+  Rect(s, 0, 0, 960, 80, C.deep);
+  Rect(s, 0, 0, 960, 5, C.orange);
+  Logo(s, 700, 20, 248, 54);
+  Bx(s, "YOUR SHAREFILE DEAL — WHAT YOU SAVE", 16, 20, 672, 30, 14, true, C.orange, C.deep, 1, 3);
+  Bx(s, d.prospect + "   |   " + d.users + " Users   |   ShareFile " + d.plan + "   |   " + d.fBill + " billing", 16, 54, 900, 22, 10, false, C.ltNavy, C.deep, 1, 3);
+  Rect(s, 0, 80, 960, 24, C.navy);
+  Bx(s, "Pricing at " + d.fBill + " rate vs SRP | Competitor cost at list price", 16, 82, 920, 20, 10, false, C.ltNavy, C.navy, 1, 3);
+  const pY = 108, pH = 156;
+  Rect(s, 12, pY, 294, pH, C.wht, C.navy, 1.5);
+  Bx(s, "VS COMPETITOR (AT SRP)", 24, pY+10, 270, 16, 10, true, C.navy, C.wht, 1, 3);
+  Bx(s, d.fSavPct, 24, pY+32, 270, 64, 38, true, C.navy, C.wht, 1, 3);
+  Bx(s, "cheaper than current stack", 24, pY+102, 270, 18, 11, false, C.gray, C.wht, 1, 3);
+  Bx(s, "ShareFile SRP: " + d.fSRPpu, 24, pY+124, 270, 18, 11, false, C.navy, C.wht, 1, 3);
+  Rect(s, 318, pY, 294, pH, C.ltOrng, C.orange, 1.5);
+  Bx(s, "YOUR DEAL DISCOUNT OFF SRP", 330, pY+10, 270, 16, 10, true, C.orange, C.ltOrng, 1, 3);
+  Bx(s, d.fDealPct, 330, pY+32, 270, 64, 38, true, C.orange, C.ltOrng, 1, 3);
+  Bx(s, "off list price (" + d.fDealAmt + "/user/yr)", 330, pY+102, 270, 18, 11, false, C.orange, C.ltOrng, 1, 3);
+  Bx(s, "Your Deal Price: " + d.fDealPU, 330, pY+124, 270, 18, 11, true, C.orange, C.ltOrng, 1, 3);
+  Rect(s, 624, pY, 322, pH, C.wht, C.green, 2);
+  Bx(s, "TOTAL EFFECTIVE SAVINGS", 636, pY+10, 298, 16, 10, true, C.dkGreen, C.wht, 1, 3);
+  Bx(s, d.fTESPct, 636, pY+32, 298, 64, 38, true, C.dkGreen, C.wht, 1, 3);
+  Bx(s, "all-in vs today at deal price", 636, pY+102, 298, 18, 11, false, C.gray, C.wht, 1, 3);
+  Bx(s, "Savings: " + d.fTESAmt + "/yr", 636, pY+124, 298, 18, 11, true, C.dkGreen, C.wht, 1, 3);
+  const sBY = 268;
+  Rect(s, 0, sBY, 960, 52, C.deep);
+  Bx(s, d.fTESAmt + "/yr", 16, sBY+4, 300, 44, 22, true, C.green, C.deep, 1, 3);
+  Bx(s, "Saved / Year at Deal Price", 320, sBY+4, 290, 44, 13, true, C.ltNavy, C.deep, 1, 3);
+  Ln(s, 618, sBY+8, 618, sBY+44, "506EA0", 1);
+  Bx(s, d.f3Deal, 634, sBY+4, 200, 44, 22, true, C.orange, C.deep, 1, 3);
+  Bx(s, "3-Year Savings", 838, sBY+4, 118, 44, 12, true, C.ltNavy, C.deep, 1, 3);
+  const stY = 324;
+  Rect(s, 0, stY, 960, 80, C.ltNavy);
+  Bx(s, "YOUR SHAREFILE SAVINGS STORY", 18, stY+6, 920, 16, 11, true, C.navy, C.ltNavy, 1, 3);
+  Bx(s, "vs. Current Stack:  " + d.fSavPct + "  cheaper", 18, stY+28, 292, 42, 13, true, C.navy, C.ltNavy, 1, 3);
+  Bx(s, "Your Deal Discount:  " + d.fDealPct, 320, stY+28, 292, 42, 13, true, C.orange, C.ltNavy, 1, 3);
+  Bx(s, "Total Effective Savings:  " + d.fTESPct + "  all-in", 626, stY+28, 322, 42, 13, true, C.dkGreen, C.ltNavy, 1, 3);
+  Rect(s, 0, 408, 960, 132, C.deep);
+  Bx(s, "Confidential   |   Progress ShareFile Savings Calculator   |   " + d.fDate + "   |   Deal pricing is rep-entered; not a commitment by ShareFile.",
+     16, 410, 920, 14, 7, false, C.foot, C.deep, 2, 3);
+  BxDisclaimer(s, 8, 426, 944, 112, 9, C.disc, C.deep);
+  DisclaimerBanner(s);
+}
+
+function cleanName(sIn) {
+  let s = String(sIn).trim().replace(/[\\/:*?"<>|]/g, "").trim();
+  return s.length > 50 ? s.slice(0, 50) : s;
+}
+
+async function exportSavings() {
+  const i = readInputs(), o = compute(i);
+  const prospect = i.prospect, nUsers = Math.trunc(num(i.users));
+  // Validate required inputs (same checks and messages as the macro)
+  if (!prospect.trim() || prospect === "0") return msgBox("Missing Input", "Please enter a Company / Prospect Name (yellow cell).", "warn");
+  if (nUsers < 1) return msgBox("Missing Input", "Please enter a valid number of users.", "warn");
+  if (!i.esign) return msgBox("Missing Input", "Please select an E-Sign Provider from the dropdown.", "warn");
+  if (!i.fs) return msgBox("Missing Input", "Please select a Collaboration Tool from the dropdown.", "warn");
+  if (!i.plan) return msgBox("Missing Input", "Please select a ShareFile Plan.", "warn");
+  if (i.mode === "Manual Entry" && (i.f8 === "" || i.f9 === "" || i.f10 === "")) {
+    msgBox("Manual Prices Required", "You are in Manual Entry mode but the Manual Override section is incomplete.\n\nPlease enter prices in the orange cells:\n  • E-Sign $/User/Yr\n  • Collaboration $/User/Yr\n  • ShareFile $/User/Yr\n\nThen click Export to Slides.", "warn");
+    $("f8").focus(); return;
+  }
+  if (typeof PptxGenJS === "undefined") return msgBox("Slide Error", "The slide library could not be loaded. Check your internet connection and reload the page.", "warn");
+
+  // Guard negative savings (as in the macro)
+  const sav = Math.max(0, o.savings), savPct = Math.max(0, o.savingsPct), pu = Math.max(0, o.perUser);
+  const bHasDeal = o.dealPrice > 0;
+  const now = new Date();
+  const d = {
+    prospect, users: String(nUsers), lineSize: o.lineSize, esign: i.esign, fs: i.fs, plan: i.plan,
+    fCurr: f0(o.current) + "/yr", fSF: f0(o.sfCost) + "/yr", fSav: f0(sav) + "/yr", fSavNum: f0(sav), fSavPct: fp(savPct),
+    fESign: f0(o.esignSpend) + "/yr", fFSyr: f0(o.fsSpend) + "/yr", fPU: f0(pu) + "/user/yr", f3Yr: f0(o.threeYear),
+    fDate: now.toLocaleString("en-US", { month:"short" }) + " " + now.getFullYear(), fBill: i.billing,
+    fRate: (nUsers > 0 && o.sfCost > 0) ? f2(o.sfCost / nUsers / 12) + "/user/mo" : "N/A",
+    fFSMo: (nUsers > 0 && o.fsSpend > 0) ? f2(o.fsSpend / nUsers / 12) : "$0.00",
+    fDealPU: bHasDeal ? f2(o.dealPrice) + "/user/yr" : "", fDealPct: bHasDeal ? fp(o.dealPct) + " off list" : "",
+    fTESPct: bHasDeal ? fp(o.tesPct) : "", fTESAmt: bHasDeal ? f0(o.tesAmt) : "", f3Deal: bHasDeal ? f0(o.deal3) : "",
+    fSRPpu: bHasDeal ? f2(o.srp) + "/user/yr" : "", fDealAmt: f0(o.dealAmt)
+  };
+
+  const btn = $("exportBtn"); btn.disabled = true;
+  try {
+    const pptx = new PptxGenJS();
+    pptx.defineLayout({ name:"SF169", width:P(960), height:P(540) });
+    pptx.layout = "SF169";
+    pptx.author = "Progress ShareFile"; pptx.title = "ShareFile Savings - " + prospect;
+    buildSlideCover(pptx, d);
+    buildSlide1(pptx, d);
+    buildSlide2(pptx, d);
+    if (bHasDeal) buildSlide3(pptx, d);
+    const ymd = now.getFullYear() + String(now.getMonth() + 1).padStart(2, "0") + String(now.getDate()).padStart(2, "0");
+    const fileName = "ShareFile Savings - " + cleanName(prospect) + " - " + ymd + ".pptx";
+    await pptx.writeFile({ fileName });
+    const dealLine = bHasDeal ? "\n  Deal Savings:  " + d.fTESAmt + "/yr  (" + d.fTESPct + " vs competitor)" : "";
+    msgBox("Export Complete", "Export complete!\n\n  Company:  " + prospect + "   |   " + nUsers + " users   |   " + d.fBill +
+      "\n  Savings:  " + d.fSavNum + "/yr  (" + d.fSavPct + " vs competitor)" + dealLine + "\n\n  File:  " + fileName + "\n  Saved to:  your browser's Downloads folder", "ok");
+  } catch (err) {
+    msgBox("Slide Error", "Slide build error: " + (err && err.message ? err.message : err), "warn");
+  } finally { btn.disabled = false; }
+}
+$("exportBtn").addEventListener("click", exportSavings);
+
+/* ===================== Init ===================== */
+writeInputs(Object.assign({}, DEFAULTS, load() || {}));
+applyManualOverrideState();
+render();
+try { const t = localStorage.getItem("sfCalcTab"); if (t) { const b = document.querySelector(`nav button[data-tab="${t}"]`); if (b) b.click(); } } catch (e) {}
+// test hook
+window.__sf = { compute, readInputs, writeInputs, render, applyManualOverrideState, exportSavings };
+</script>
+</body>
+</html>
